@@ -3,55 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกหยุดยา</title>
+    <title>บันทึกหยุดยา - Pre-op Med Reminder</title>
+    <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding-top: 50px; }
-        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 300px; }
-        .med-box { background: #e7f3ff; padding: 10px; border-radius: 10px; margin: 20px 0; }
-        button { background: #28a745; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-size: 16px; cursor: pointer; }
+        body { font-family: 'Sarabun', sans-serif, system-ui; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
+        .med-box { background: #e7f3ff; padding: 15px; border-radius: 12px; margin: 20px 0; border: 1px solid #007bff; }
+        .consent-text { text-align: left; font-size: 0.9rem; color: #555; line-height: 1.6; background: #fafafa; padding: 15px; border-radius: 10px; border-left: 4px solid #28a745; margin-bottom: 20px; }
+        button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #218838; transform: scale(1.02); }
+        .hidden { display: none; }
+        .footer-note { font-size: 0.75rem; color: #888; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>📌 แจ้งเตือนหยุดยา</h2>
-        <div class="med-box">
-            <p style="font-size: 0.8rem; color: #666; margin-top: 20px;">
-    🔒 <b>ประกาศความเป็นส่วนตัว:</b><br>
-    ข้อมูลนี้จะถูกใช้เพื่อสร้างสร้างการแจ้งเตือนหยุดยาในปฏิทินส่วนบุคคลของผู้ป่วยเท่านั้น
-    ไม่มีการเก็บรวบรวมข้อมูลส่วนบุคคลส่งไปยังเซิร์ฟเวอร์ภายนอกเป็นไปตามนโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)
-หมายเหตุ : กรณีเลื่อนนัดผ่าตัด กรุณาติดต่อหน่วยอายุรกรรม 2 โทร 02-849-6600 เพื่อปรับเปลี่ยนการหยุดยา
-</p>
-            <p>ชื่อยา: <b id="displayMed">กำลังโหลด...</b></p>
-            <p>วันที่หยุด: <b id="displayDate">กำลังโหลด...</b></p>
+        <div id="consentSection">
+            <h2 style="color: #28a745;">🛡️ การคุ้มครองข้อมูล</h2>
+            <div class="consent-text">
+                <b>ประกาศความเป็นส่วนตัว (PDPA):</b><br>
+                1. ข้อมูลชื่อยาและวันที่แสดงผลนี้ มาจาก QR Code ที่เจ้าหน้าที่ออกให้<br>
+                2. ระบบ <b>"ไม่มี"</b> การเก็บข้อมูลของคุณลงในเซิร์ฟเวอร์ใดๆ<br>
+                3. ข้อมูลจะถูกใช้เพื่อบันทึกลงปฏิทินในมือถือของคุณเท่านั้น<br>
+                4. เมื่อคุณปิดหน้าเว็บนี้ ข้อมูลการแจ้งเตือนจะหายไปจากระบบทันที
+            </div>
+            <button onclick="acceptConsent()">ยินยอมและดำเนินการต่อ</button>
         </div>
-        <button onclick="generateICS()">📅 บันทึกลงปฏิทิน</button>
+
+        <div id="mainSection" class="hidden">
+            <h2 style="color: #007bff;">📌 บันทึกแจ้งเตือน</h2>
+            <div class="med-box">
+                <p style="font-size: 0.8rem; color: #666; margin-top: 20px;">
+    🔒 <b>หมายเหตุ<b><br>
+   กรณีเลื่อนนัดผ่าตัด กรุณาติดต่อหน่วยอายุรกรรม 2 โทร 02-849-6600 เพื่อปรับเปลี่ยนการหยุดยา
+</p>
+                <p style="margin-bottom: 5px;">ชื่อยาที่ต้องหยุด:</p>
+                <h3 id="displayMed" style="margin-top: 0; color: #d9534f;">-</h3>
+                <p style="margin-bottom: 5px;">ตั้งแต่วันที่:</p>
+                <h3 id="displayDate" style="margin-top: 0;">-</h3>
+            </div>
+            <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
+            <p class="footer-note">เมื่อบันทึกเสร็จแล้ว คุณสามารถปิดหน้านี้ได้ทันที</p>
+        </div>
     </div>
 
     <script>
-        // ดึงค่าจาก URL
-        const params = new URLSearchParams(window.location.search);
-        const med = params.get('m') || "ไม่พบข้อมูลชื่อยา";
-        const dateRaw = params.get('d') || "";
+        // ดึงข้อมูลจาก URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const med = urlParams.get('m') || "ไม่ระบุชื่อยา";
+        const dateRaw = urlParams.get('d') || "";
 
-        document.getElementById('displayMed').innerText = med;
-        
-        if (dateRaw && dateRaw.length === 8) {
-            const formatted = dateRaw.substring(6,8) + "/" + dateRaw.substring(4,6) + "/" + dateRaw.substring(0,4);
-            document.getElementById('displayDate').innerText = formatted;
-        } else {
-            document.getElementById('displayDate').innerText = "ไม่พบวันที่";
+        // จัดการหน้าจอ
+        function acceptConsent() {
+            document.getElementById('consentSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            
+            // แสดงข้อมูลหลังกดยินยอม
+            document.getElementById('displayMed').innerText = med;
+            if(dateRaw && dateRaw.length === 8) {
+                document.getElementById('displayDate').innerText = `${dateRaw.substring(6,8)}/${dateRaw.substring(4,6)}/${dateRaw.substring(0,4)}`;
+            }
         }
 
         function generateICS() {
-            if(!dateRaw) { alert("ไม่มีข้อมูลวันที่!"); return; }
             const icsMsg = [
                 "BEGIN:VCALENDAR",
                 "VERSION:2.0",
                 "BEGIN:VEVENT",
-                "SUMMARY:หยุดยา " + med,
-                "DTSTART;VALUE=DATE:" + dateRaw,
-                "DTEND;VALUE=DATE:" + dateRaw,
-                "DESCRIPTION:กรุณาหยุดยาตามแพทย์สั่ง",
+                `SUMMARY:หยุดยา ${med} (ก่อนผ่าตัด)`,
+                `DTSTART;VALUE=DATE:${dateRaw}`,
+                `DTEND;VALUE=DATE:${dateRaw}`,
+                `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้เป็นต้นไปเพื่อเตรียมตัวผ่าตัด`,
+                "BEGIN:VALARM",
+                "TRIGGER:-PT16H", // เตือนล่วงหน้า 16 ชั่วโมง (เช่น 8 โมงเช้าของวันนั้น)
+                "ACTION:DISPLAY",
+                "DESCRIPTION:Reminder",
+                "END:VALARM",
                 "END:VEVENT",
                 "END:VCALENDAR"
             ].join("\n");
