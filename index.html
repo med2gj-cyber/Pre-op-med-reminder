@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกหยุดยา</title>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        .med-box { background: #e7f3ff; padding: 15px; border-radius: 10px; margin: 20px 0; border: 1px solid #007bff; }
+        button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+        button:hover { background: #218838; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📌 บันทึกแจ้งเตือน</h2>
+        <div class="med-box">
+            <p>ชื่อยาที่ต้องหยุด:</p>
+            <h3 id="displayMed">-</h3>
+            <p>ตั้งแต่วันที่:</p>
+            <h3 id="displayDate">-</h3>
+        </div>
+        <button onclick="generateICS()">📅 กดเพื่อเพิ่มในปฏิทิน</button>
+    </div>
+
+    <script>
+        // ดึงข้อมูลจาก URL (?m=Aspirin&d=20260210)
+        const urlParams = new URLSearchParams(window.location.search);
+        const med = urlParams.get('m') || "ไม่ระบุชื่อยา";
+        const dateRaw = urlParams.get('d'); // YYYYMMDD
+
+        // แสดงผลบนหน้าจอ
+        document.getElementById('displayMed').innerText = med;
+        if(dateRaw) {
+            document.getElementById('displayDate').innerText = `${dateRaw.substring(6,8)}/${dateRaw.substring(4,6)}/${dateRaw.substring(0,4)}`;
+        }
+
+        function generateICS() {
+            // สร้างเนื้อหาไฟล์ Calendar
+            const icsMsg = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "BEGIN:VEVENT",
+                `SUMMARY:หยุดยา ${med} (ก่อนผ่าตัด)`,
+                `DTSTART;VALUE=DATE:${dateRaw}`,
+                `DTEND;VALUE=DATE:${dateRaw}`,
+                `DESCRIPTION:กรุณาหยุดทานยา ${med} ตามที่แพทย์สั่งเพื่อเตรียมตัวเข้ารับการผ่าตัด`,
+                "BEGIN:VALARM", // ตั้งค่าให้แจ้งเตือนตอน 08:00
+                "TRIGGER:-PT16H", // เตือนล่วงหน้า (ปรับแต่งได้)
+                "ACTION:DISPLAY",
+                "DESCRIPTION:Reminder",
+                "END:VALARM",
+                "END:VEVENT",
+                "END:VCALENDAR"
+            ].join("\n");
+
+            const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'stop-med.ics');
+            link.click();
+        }
+    </script>
+</body>
+</html>
