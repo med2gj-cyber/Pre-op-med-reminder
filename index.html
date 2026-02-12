@@ -39,6 +39,8 @@
                 <h3 id="displayDate" style="margin-top: 0;">-</h3>
             </div>
             <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
+            <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ (ทั่วไป/iPhone)</button>
+            <button onclick="generateGoogleLink()" style="background: #4285F4; margin-top: 10px;">📅 บันทึกลง Google Calendar (Android)</button>
         </div>
     </div>
 
@@ -90,6 +92,19 @@
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+}
+
+// วางฟังก์ชันนี้เพิ่มเข้าไปในส่วน <script>
+function generateGoogleLink() {
+    // กำหนดเวลา 07:00 น.
+    const gStart = dateRaw + "T070000"; 
+    const gEnd = dateRaw + "T080000";
+    
+    // สร้าง Link สำหรับ Google Calendar โดยตรง
+    const googleUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("หยุดยา " + med)}&dates=${gStart}/${gEnd}&details=${encodeURIComponent("กรุณางดทานยา " + med + " เพื่อเตรียมตัวผ่าตัด")}&location=ที่บ้าน&sf=true&output=xml`;
+    
+    // สั่งให้เปิดหน้าต่างใหม่ไปที่ Google Calendar
+    window.open(googleUrl, '_blank');
 }
     </script>
 </body>
