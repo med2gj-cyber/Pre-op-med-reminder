@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกหยุดยา - Pre-op Med Reminder</title>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
+        .med-box { background: #e7f3ff; padding: 15px; border-radius: 12px; margin: 20px 0; border: 1px solid #007bff; }
+        .consent-text { text-align: left; font-size: 0.9rem; color: #555; line-height: 1.6; background: #fafafa; padding: 15px; border-radius: 10px; border-left: 4px solid #28a745; margin-bottom: 20px; }
+        button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="consentSection">
+            <h2 style="color: #28a745;">🛡️ การคุ้มครองข้อมูล</h2>
+            <div class="consent-text">
+                <b>นโยบายความเป็นส่วนตัว:</b><br>
+                - ข้อมูลนี้ใช้เพื่อสร้างนัดหมายในเครื่องของคุณเท่านั้น<br>
+                - ระบบไม่มีการบันทึกข้อมูลส่วนบุคคลลงเซิร์ฟเวอร์
+            </div>
+            <button onclick="acceptConsent()">ยินยอมและดำเนินการต่อ</button>
+        </div>
+
+        <div id="mainSection" class="hidden">
+            <h2 style="color: #007bff;">📌 บันทึกแจ้งเตือน</h2>
+            <div class="med-box">
+                <p>หมายเหตุ</p>
+               <p> กรณีเลื่อนนัดผ่าตัด 
+          กรุณาติดต่อหน่วยอายุรกรรม 2 
+    โทร 02-849-6600 เพื่อปรับเปลี่ยนการหยุดยา</p>
+                <p>ชื่อยาที่ต้องหยุด:</p>
+                <h3 id="displayMed" style="color: #d9534f;">-</h3>
+                <p>ตั้งแต่วันที่ (เวลา 07:00 น.):</p>
+                <h3 id="displayDate">-</h3>
+            </div>
+            <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const med = urlParams.get('m') || "ไม่ระบุชื่อยา";
+        const dateRaw = urlParams.get('d') || "";
+
+        function acceptConsent() {
+            document.getElementById('consentSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            document.getElementById('displayMed').innerText = med;
+            if(dateRaw.length === 8) {
+                document.getElementById('displayDate').innerText = `${dateRaw.substring(6,8)}/${dateRaw.substring(4,6)}/${dateRaw.substring(0,4)}`;
+            }
+        }
+
+        function generateICS() {
+    const icsMsg = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Med Reminder//TH",
+        "BEGIN:VEVENT",
+        `SUMMARY:หยุดยา ${med} (ก่อนผ่าตัด)`,
+        `DTSTART;VALUE=DATE:${dateRaw}`,
+        `DTEND;VALUE=DATE:${dateRaw}`,
+        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้เป็นต้นไปเพื่อเตรียมตัวผ่าตัด`,
+        "BEGIN:VALARM",
+        "TRIGGER:-PT16H",
+        "ACTION:DISPLAY",
+        "DESCRIPTION:Reminder",
+        "END:VALARM",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ].join("\n");
+
+    const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // สร้างลิงก์ชั่วคราวและสั่งคลิก
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'med-alert.ics');
+    document.body.appendChild(link); // เพิ่มเข้าไปในหน้าจอก่อนคลิก
+    link.click();
+    document.body.removeChild(link); // ลบทิ้งเมื่อเสร็จ
+    window.URL.revokeObjectURL(url); // คืนค่าความจำ
+}
+        }
+    </script>
+</body>
+</html>
