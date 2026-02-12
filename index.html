@@ -57,58 +57,48 @@
                 document.getElementById('displayDate').innerText = `${dateRaw.substring(6,8)}/${dateRaw.substring(4,6)}/${dateRaw.substring(0,4)}`;
             }
         }
+   function smartSaveCalendar() {
+        const startTime = dateRaw + "T070000"; 
+        const endTime = dateRaw + "T080000";
+        
+        const icsMsg = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "BEGIN:VEVENT",
+            `SUMMARY:⚠️ หยุดยา ${med}`, 
+            `DTSTART;TZID=Asia/Bangkok:${startTime}`,
+            `DTEND;TZID=Asia/Bangkok:${endTime}`,
+            `DESCRIPTION:กรุณางดทานยา ${med} เพื่อเตรียมตัวผ่าตัด`,
+            "BEGIN:VALARM",
+            "TRIGGER:-PT0M",
+            "ACTION:DISPLAY",
+            "END:VALARM",
+            "END:VEVENT",
+            "END:VCALENDAR"
+        ].join("\n");
 
-       function smartSaveCalendar() {
-    // 1. ตรวจสอบว่าเป็นอุปกรณ์ประเภทไหน
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isAndroid = /Android/.test(navigator.userAgent);
+        const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    // 2. ถ้าเป็น iPhone (iOS) ให้ใช้การโหลดไฟล์ .ics เพราะ Safari จะเปิดปฏิทินให้ทันที
-    if (isIOS) {
-        generateICS();
-    } 
-    // 3. ถ้าเป็น Android ให้ใช้ Link ตรงไปที่ Google Calendar เพื่อความชัวร์
-    else if (isAndroid) {
-        const gStart = dateRaw + "T070000";
-        const gEnd = dateRaw + "T080000";
-        const googleUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("หยุดยา " + med)}&dates=${gStart}/${gEnd}&details=${encodeURIComponent("กรุณางดทานยา " + med + " เพื่อเตรียมตัวผ่าตัด")}&location=ที่บ้าน&sf=true&output=xml`;
-        window.open(googleUrl, '_blank');
-    } 
-    // 4. กรณีอื่นๆ (เช่น คอมพิวเตอร์) ให้โหลดไฟล์ .ics เป็นค่าเริ่มต้น
-    else {
-        generateICS();
+        if (isIOS) {
+            // สำหรับ iPhone: เปิดผ่าน Safari จะเด้งปฏิทินทันที
+            window.location.href = url;
+        } else {
+            // สำหรับ Android: ดาวน์โหลดไฟล์และให้ผู้ใช้กดเปิดจากแถบแจ้งเตือน
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'med-reminder.ics';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // แจ้งเตือนสั้นๆ ให้ผู้สูงอายุเข้าใจง่าย
+            alert("บันทึกสำเร็จ! กรุณากดปุ่ม 'เปิด' (Open) ที่ด้านบนหน้าจอ เพื่อใส่ลงในปฏิทินนะคะ/ครับ");
+        }
     }
-}
-
-// ฟังก์ชันสร้างไฟล์ ICS (ดึงข้อมูลมาจากโค้ดเดิมของคุณ)
-function generateICS() {
-    const startTime = dateRaw + "T070000"; 
-    const endTime = dateRaw + "T080000";
-    const icsMsg = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "BEGIN:VEVENT",
-        `SUMMARY:หยุดยา ${med}`,
-        `DTSTART;TZID=Asia/Bangkok:${startTime}`,
-        `DTEND;TZID=Asia/Bangkok:${endTime}`,
-        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้เพื่อเตรียมตัวผ่าตัด`,
-        "BEGIN:VALARM",
-        "TRIGGER:-PT0M",
-        "ACTION:DISPLAY",
-        "END:VALARM",
-        "END:VEVENT",
-        "END:VCALENDAR"
-    ].join("\n");
-
-    const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'med-reminder.ics';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+</script>
     </script>
 </body>
 </html>
