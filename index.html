@@ -57,32 +57,40 @@
             }
         }
 
-        function generateICS() {
-            const icsMsg = [
-                "BEGIN:VCALENDAR",
-                "VERSION:2.0",
-                "BEGIN:VEVENT",
-                `SUMMARY:หยุดยา ${med}`,
-                `DTSTART;VALUE=DATE:${dateRaw}`,
-                `DTEND;VALUE=DATE:${dateRaw}`,
-                `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้เพื่อเตรียมตัวผ่าตัด`,
-                "BEGIN:VALARM",
-                "TRIGGER:-PT16H",
-                "ACTION:DISPLAY",
-                "END:VALARM",
-                "END:VEVENT",
-                "END:VCALENDAR"
-            ].join("\n");
+       function generateICS() {
+    // กำหนดเวลาเริ่มและจบเป็น 07:00 น. (7 โมงเช้า)
+    // รูปแบบคือ T070000 (T ตามด้วยชั่วโมงนาทีวินาที)
+    const startTime = dateRaw + "T070000"; 
+    const endTime = dateRaw + "T080000"; // ให้จบเหตุการณ์ตอน 8 โมง
 
-            const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'med-reminder.ics';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+    const icsMsg = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Med Reminder//TH",
+        "BEGIN:VEVENT",
+        `SUMMARY:หยุดยา ${med} (ก่อนผ่าตัด)`,
+        `DTSTART;TZID=Asia/Bangkok:${startTime}`,
+        `DTEND;TZID=Asia/Bangkok:${endTime}`,
+        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้เป็นต้นไปเพื่อเตรียมตัวผ่าตัด`,
+        "BEGIN:VALARM",
+        "TRIGGER:-PT0M", // ให้แจ้งเตือนทันทีเมื่อถึงเวลา (07:00 น.)
+        "ACTION:DISPLAY",
+        "DESCRIPTION:Reminder",
+        "END:VALARM",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ].join("\n");
+
+    const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'med-alert.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}
     </script>
 </body>
 </html>
