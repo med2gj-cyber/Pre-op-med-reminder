@@ -38,9 +38,8 @@
                 <p style="margin-bottom: 5px;">ตั้งแต่วันที่ (เวลา 07:00 น.):</p>
                 <h3 id="displayDate" style="margin-top: 0;">-</h3>
             </div>
-            <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
-            <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ (ทั่วไป/iPhone)</button>
-            <button onclick="generateGoogleLink()" style="background: #4285F4; margin-top: 10px;">📅 บันทึกลง Google Calendar (Android)</button>
+            <button id="saveBtn" onclick="smartSaveCalendar()">📅 บันทึกลงปฏิทินมือถือ</button>
+<p class="footer-note" id="instruction">กรณี Android แนะนำให้เปิดด้วย Chrome</p>
         </div>
     </div>
 
@@ -59,25 +58,43 @@
             }
         }
 
-       function generateICS() {
-    // กำหนดเวลาเริ่มและจบเป็น 07:00 น. (7 โมงเช้า)
-    // รูปแบบคือ T070000 (T ตามด้วยชั่วโมงนาทีวินาที)
-    const startTime = dateRaw + "T070000"; 
-    const endTime = dateRaw + "T080000"; // ให้จบเหตุการณ์ตอน 8 โมง
+       function smartSaveCalendar() {
+    // 1. ตรวจสอบว่าเป็นอุปกรณ์ประเภทไหน
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/.test(navigator.userAgent);
 
+    // 2. ถ้าเป็น iPhone (iOS) ให้ใช้การโหลดไฟล์ .ics เพราะ Safari จะเปิดปฏิทินให้ทันที
+    if (isIOS) {
+        generateICS();
+    } 
+    // 3. ถ้าเป็น Android ให้ใช้ Link ตรงไปที่ Google Calendar เพื่อความชัวร์
+    else if (isAndroid) {
+        const gStart = dateRaw + "T070000";
+        const gEnd = dateRaw + "T080000";
+        const googleUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("หยุดยา " + med)}&dates=${gStart}/${gEnd}&details=${encodeURIComponent("กรุณางดทานยา " + med + " เพื่อเตรียมตัวผ่าตัด")}&location=ที่บ้าน&sf=true&output=xml`;
+        window.open(googleUrl, '_blank');
+    } 
+    // 4. กรณีอื่นๆ (เช่น คอมพิวเตอร์) ให้โหลดไฟล์ .ics เป็นค่าเริ่มต้น
+    else {
+        generateICS();
+    }
+}
+
+// ฟังก์ชันสร้างไฟล์ ICS (ดึงข้อมูลมาจากโค้ดเดิมของคุณ)
+function generateICS() {
+    const startTime = dateRaw + "T070000"; 
+    const endTime = dateRaw + "T080000";
     const icsMsg = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//Med Reminder//TH",
         "BEGIN:VEVENT",
-        `SUMMARY:หยุดยา ${med} (ก่อนผ่าตัด)`,
+        `SUMMARY:หยุดยา ${med}`,
         `DTSTART;TZID=Asia/Bangkok:${startTime}`,
         `DTEND;TZID=Asia/Bangkok:${endTime}`,
-        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้เป็นต้นไปเพื่อเตรียมตัวผ่าตัด`,
+        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้เพื่อเตรียมตัวผ่าตัด`,
         "BEGIN:VALARM",
-        "TRIGGER:-PT0M", // ให้แจ้งเตือนทันทีเมื่อถึงเวลา (07:00 น.)
+        "TRIGGER:-PT0M",
         "ACTION:DISPLAY",
-        "DESCRIPTION:Reminder",
         "END:VALARM",
         "END:VEVENT",
         "END:VCALENDAR"
@@ -87,24 +104,10 @@
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'med-alert.ics');
+    link.download = 'med-reminder.ics';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-}
-
-// วางฟังก์ชันนี้เพิ่มเข้าไปในส่วน <script>
-function generateGoogleLink() {
-    // กำหนดเวลา 07:00 น.
-    const gStart = dateRaw + "T070000"; 
-    const gEnd = dateRaw + "T080000";
-    
-    // สร้าง Link สำหรับ Google Calendar โดยตรง
-    const googleUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("หยุดยา " + med)}&dates=${gStart}/${gEnd}&details=${encodeURIComponent("กรุณางดทานยา " + med + " เพื่อเตรียมตัวผ่าตัด")}&location=ที่บ้าน&sf=true&output=xml`;
-    
-    // สั่งให้เปิดหน้าต่างใหม่ไปที่ Google Calendar
-    window.open(googleUrl, '_blank');
 }
     </script>
 </body>
