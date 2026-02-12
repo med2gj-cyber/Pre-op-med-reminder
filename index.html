@@ -58,46 +58,21 @@
             }
         }
    function smartSaveCalendar() {
-        const startTime = dateRaw + "T070000"; 
-        const endTime = dateRaw + "T080000";
-        
-        const icsMsg = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "BEGIN:VEVENT",
-            `SUMMARY:⚠️ หยุดยา ${med}`, 
-            `DTSTART;TZID=Asia/Bangkok:${startTime}`,
-            `DTEND;TZID=Asia/Bangkok:${endTime}`,
-            `DESCRIPTION:กรุณางดทานยา ${med} เพื่อเตรียมตัวผ่าตัด`,
-            "BEGIN:VALARM",
-            "TRIGGER:-PT0M",
-            "ACTION:DISPLAY",
-            "END:VALARM",
-            "END:VEVENT",
-            "END:VCALENDAR"
-        ].join("\n");
+    const startTime = dateRaw + "T070000"; 
+    const endTime = dateRaw + "T080000";
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-        const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
+    if (isIOS) {
+        // iPhone ยังคงใช้ ICS เพราะทำงานได้ดีที่สุด
+        generateICS(); 
+    } else {
+        // สำหรับ Android: ใช้ Google Calendar Link แทนการโหลดไฟล์
+        // วิธีนี้จะเด้งเข้าแอปปฏิทินทันที ไม่ต้องรอเปิดไฟล์
+        const googleUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("⚠️ หยุดยา " + med)}&dates=${startTime}/${endTime}&details=${encodeURIComponent("กรุณางดทานยา " + med + " เพื่อเตรียมตัวผ่าตัด")}&sf=true&output=xml`;
         
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-        if (isIOS) {
-            // สำหรับ iPhone: เปิดผ่าน Safari จะเด้งปฏิทินทันที
-            window.location.href = url;
-        } else {
-            // สำหรับ Android: ดาวน์โหลดไฟล์และให้ผู้ใช้กดเปิดจากแถบแจ้งเตือน
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'med-reminder.ics';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // แจ้งเตือนสั้นๆ ให้ผู้สูงอายุเข้าใจง่าย
-            alert("บันทึกสำเร็จ! กรุณากดปุ่ม 'เปิด' (Open) ที่ด้านบนหน้าจอ เพื่อใส่ลงในปฏิทินนะคะ/ครับ");
-        }
+        window.location.href = googleUrl; 
     }
+}
 </script>
     </script>
 </body>
