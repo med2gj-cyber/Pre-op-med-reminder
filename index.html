@@ -9,25 +9,10 @@
         .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
         .med-box { background: #e7f3ff; padding: 15px; border-radius: 12px; margin: 20px 0; border: 1px solid #007bff; }
         .consent-text { text-align: left; font-size: 0.9rem; color: #555; line-height: 1.6; background: #fafafa; padding: 15px; border-radius: 10px; border-left: 4px solid #28a745; margin-bottom: 20px; }
-        
-        /* ปรับปุ่มให้ใหญ่สะใจสำหรับผู้สูงอายุ */
-        button { 
-            background: #28a745; 
-            color: white; 
-            border: none; 
-            padding: 20px 30px; 
-            border-radius: 15px; 
-            font-size: 1.3rem; 
-            font-weight: bold; 
-            cursor: pointer; 
-            width: 100%; 
-            transition: 0.3s; 
-            margin-top: 10px;
-            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
-        }
-        button:hover { background: #218838; transform: scale(1.02); }
+        button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #218838; }
         .hidden { display: none; }
-        .footer-note { font-size: 0.8rem; color: #d9534f; margin-top: 20px; font-weight: bold; }
+        .footer-note { font-size: 0.75rem; color: #888; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -46,17 +31,15 @@
         <div id="mainSection" class="hidden">
             <h2 style="color: #007bff;">📌 บันทึกแจ้งเตือน</h2>
             <div class="med-box">
-                <p style="margin-bottom: 5px; color: #666; font-size: 0.85rem;">
-                    หมายเหตุ: กรณีเลื่อนนัดผ่าตัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยา โทร 02-849-6600
-                </p>
+                <p style="margin-bottom: 5px; color: #666;">หมายเหตุ: กรณีเลื่อนนัดผ่าตัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยาโทร 02-849-6600</p>
                 <hr>
                 <p style="margin-bottom: 5px;">ชื่อยาที่ต้องหยุด:</p>
-                <h3 id="displayMed" style="margin-top: 0; color: #d9534f; font-size: 1.6rem;">-</h3>
-                <p style="margin-bottom: 5px;">วันที่เริ่มหยุด (เวลา 07:00 น.):</p>
-                <h3 id="displayDate" style="margin-top: 0; font-size: 1.6rem;">-</h3>
+                <h3 id="displayMed" style="margin-top: 0; color: #d9534f;">-</h3>
+                <p style="margin-bottom: 5px;">ตั้งแต่วันที่ (เวลา 07:00 น.):</p>
+                <h3 id="displayDate" style="margin-top: 0;">-</h3>
             </div>
             <button id="saveBtn" onclick="smartSaveCalendar()">📅 บันทึกลงปฏิทินมือถือ</button>
-            <p class="footer-note" id="instruction">⚠️ เมื่อกดแล้ว ให้กด "บันทึก" (Save) ที่มุมขวาบนของหน้าจออีกครั้งนะคะ/ครับ</p>
+<p class="footer-note" id="instruction">กรณี Android แนะนำให้เปิดด้วย Chrome</p>
         </div>
     </div>
 
@@ -75,41 +58,51 @@
             }
         }
 
-        function smartSaveCalendar() {
-            const startTime = dateRaw + "T070000"; 
-            const endTime = dateRaw + "T080000";
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+       function smartSaveCalendar() {
+    // กำหนดเวลา 07:00 น.
+    const startTime = dateRaw + "T070000"; 
+    const endTime = dateRaw + "T080000";
+    
+    // สร้างเนื้อหาไฟล์นัดหมายมาตรฐานสากล
+    const icsMsg = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Med2GJ//PWA//TH",
+        "BEGIN:VEVENT",
+        `SUMMARY:⚠️ หยุดยา ${med}`,
+        `DTSTART;TZID=Asia/Bangkok:${startTime}`,
+        `DTEND;TZID=Asia/Bangkok:${endTime}`,
+        `DESCRIPTION:กรุณางดทานยา ${med} เพื่อเตรียมตัวผ่าตัดตามคำแนะนำของแพทย์`,
+        "BEGIN:VALARM",
+        "TRIGGER:-PT0M",
+        "ACTION:DISPLAY",
+        "DESCRIPTION:Reminder",
+        "END:VALARM",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ].join("\n");
 
-            if (isIOS) {
-                generateICS(startTime, endTime); 
-            } else {
-                // สำหรับ Android: เปิดเข้าหน้า Google Calendar โดยตรง
-                const googleUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("⚠️ หยุดยา " + med)}&dates=${startTime}/${endTime}&details=${encodeURIComponent("กรุณางดทานยา " + med + " เพื่อเตรียมตัวผ่าตัด")}&sf=true&output=xml`;
-                window.location.href = googleUrl; 
-            }
-        }
+    // สร้างไฟล์จำลองขึ้นมาในความจำเครื่อง
+    const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // สร้างลิงก์ลับเพื่อสั่งให้เครื่องดาวน์โหลดไฟล์
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'med-alert.ics');
+    document.body.appendChild(link);
+    link.click();
+    
+    // ลบลิงก์ออกเพื่อประหยัดความจำ
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 
-        function generateICS(start, end) {
-            const icsMsg = [
-                "BEGIN:VCALENDAR",
-                "VERSION:2.0",
-                "BEGIN:VEVENT",
-                `SUMMARY:⚠️ หยุดยา ${med}`,
-                `DTSTART;TZID=Asia/Bangkok:${start}`,
-                `DTEND;TZID=Asia/Bangkok:${end}`,
-                `DESCRIPTION:กรุณางดทานยา ${med} เพื่อเตรียมตัวผ่าตัด`,
-                "BEGIN:VALARM",
-                "TRIGGER:-PT0M",
-                "ACTION:DISPLAY",
-                "END:VALARM",
-                "END:VEVENT",
-                "END:VCALENDAR"
-            ].join("\n");
-
-            const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            window.location.href = url;
-        }
+    // แจ้งเตือนผู้สูงอายุ (สำคัญมากสำหรับ Android)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (!isIOS) {
+        alert("บันทึกสำเร็จ! กรุณากดปุ่ม 'เปิด' (Open) ที่แจ้งเตือนด้านบน เพื่อเก็บลงปฏิทินของเครื่องนะคะ/ครับ");
+    }
+}
     </script>
 </body>
 </html>
