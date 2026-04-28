@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกหยุดยาสูดก่อนตรวจสมรรถภาพปอด</title>
+    <style>
+        body { font-family: 'Sarabun', sans-serif, -apple-system, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
+        .med-box { background: #e7f3ff; padding: 15px; border-radius: 12px; margin: 20px 0; border: 1px solid #007bff; }
+        .consent-text { text-align: left; font-size: 0.9rem; color: #555; line-height: 1.6; background: #fafafa; padding: 15px; border-radius: 10px; border-left: 4px solid #28a745; margin-bottom: 20px; }
+        button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #218838; }
+        .hidden { display: none; }
+        .footer-note { font-size: 0.75rem; color: #888; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="consentSection">
+            <h2 style="color: #28a745;">🛡️ การคุ้มครองข้อมูล</h2>
+            <div class="consent-text">
+                <b>ประกาศความเป็นส่วนตัว (PDPA):</b><br>
+                1. ข้อมูลนี้ใช้เพื่อสร้างนัดหมายในเครื่องของคุณเท่านั้น<br>
+                2. ระบบ <b>"ไม่มี"</b> การเก็บข้อมูลของคุณลงในฐานข้อมูลใดๆ<br>
+                3. เมื่อปิดหน้านี้ ข้อมูลจะถูกล้างออกจากระบบทันที
+            </div>
+            <button onclick="acceptConsent()">ยินยอมและดำเนินการต่อ</button>
+        </div>
+
+        <div id="mainSection" class="hidden">
+            <h2 style="color: #007bff;">📌 บันทึกแจ้งเตือน</h2>
+            <div class="med-box">
+                <p style="margin-bottom: 5px; color: #666;">หมายเหตุ: กรณีเลื่อนนัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยาสูดโทร 02-849-6600</p>
+                <hr>
+                <p style="margin-bottom: 5px;">ชื่อยาที่ต้องหยุด:</p>
+                <h3 id="displayMed" style="margin-top: 0; color: #d9534f;">-</h3>
+                <p style="margin-bottom: 5px;">ตั้งแต่วันที่ (เวลา 07:00 น.):</p>
+                <h3 id="displayDate" style="margin-top: 0;">-</h3>
+            </div>
+            <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const med = urlParams.get('m') || "ไม่ระบุชื่อยา";
+        const dateRaw = urlParams.get('d') || "";
+
+        function acceptConsent() {
+            document.getElementById('consentSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            
+            document.getElementById('displayMed').innerText = med;
+            if(dateRaw && dateRaw.length === 8) {
+                document.getElementById('displayDate').innerText = `${dateRaw.substring(6,8)}/${dateRaw.substring(4,6)}/${dateRaw.substring(0,4)}`;
+            }
+        }
+
+       function generateICS() {
+    // กำหนดเวลาเริ่มและจบเป็น 07:00 น. (7 โมงเช้า)
+    // รูปแบบคือ T070000 (T ตามด้วยชั่วโมงนาทีวินาที)
+    const startTime = dateRaw + "T070000"; 
+    const endTime = dateRaw + "T080000"; // ให้จบเหตุการณ์ตอน 8 โมง
+
+    const icsMsg = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Med Reminder//TH",
+        "BEGIN:VEVENT",
+        `SUMMARY:หยุดยา ${med} (ก่อนตรวจสมรรถภาพปอด)`,
+        `DTSTART;TZID=Asia/Bangkok:${startTime}`,
+        `DTEND;TZID=Asia/Bangkok:${endTime}`,
+        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้จนถึงวันนัดหมายตรวจสมรรถภาพปอด`,
+        "BEGIN:VALARM",
+        "TRIGGER:-PT0M", // ให้แจ้งเตือนทันทีเมื่อถึงเวลา (07:00 น.)
+        "ACTION:DISPLAY",
+        "DESCRIPTION:Reminder",
+        "END:VALARM",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ].join("\n");
+
+    const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'med-alert.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}
+    </script>
+</body>
+</html>
