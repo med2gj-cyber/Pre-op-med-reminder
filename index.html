@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกหยุดยา - Pre-op Med Reminder</title>
+    <title>บันทึกหยุดยาสูดก่อนตรวจสมรรถภาพปอด</title>
     <style>
         body { font-family: 'Sarabun', sans-serif, -apple-system, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
@@ -31,15 +31,14 @@
         <div id="mainSection" class="hidden">
             <h2 style="color: #007bff;">📌 บันทึกแจ้งเตือน</h2>
             <div class="med-box">
-                <p style="margin-bottom: 5px; color: #666;">หมายเหตุ: กรณีเลื่อนนัดผ่าตัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยาโทร 02-849-6600</p>
+                <p style="margin-bottom: 5px; color: #666;">หมายเหตุ: กรณีเลื่อนนัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยาสูดโทร 02-849-6600</p>
                 <hr>
                 <p style="margin-bottom: 5px;">ชื่อยาที่ต้องหยุด:</p>
                 <h3 id="displayMed" style="margin-top: 0; color: #d9534f;">-</h3>
                 <p style="margin-bottom: 5px;">ตั้งแต่วันที่ (เวลา 07:00 น.):</p>
                 <h3 id="displayDate" style="margin-top: 0;">-</h3>
             </div>
-            <button id="saveBtn" onclick="smartSaveCalendar()">📅 บันทึกลงปฏิทินมือถือ</button>
-<p class="footer-note" id="instruction">กรณี Android แนะนำให้เปิดด้วย Chrome</p>
+            <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
         </div>
     </div>
 
@@ -58,23 +57,23 @@
             }
         }
 
-       function smartSaveCalendar() {
-    // กำหนดเวลา 07:00 น.
+       function generateICS() {
+    // กำหนดเวลาเริ่มและจบเป็น 07:00 น. (7 โมงเช้า)
+    // รูปแบบคือ T070000 (T ตามด้วยชั่วโมงนาทีวินาที)
     const startTime = dateRaw + "T070000"; 
-    const endTime = dateRaw + "T080000";
-    
-    // สร้างเนื้อหาไฟล์นัดหมายมาตรฐานสากล
+    const endTime = dateRaw + "T080000"; // ให้จบเหตุการณ์ตอน 8 โมง
+
     const icsMsg = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//Med2GJ//PWA//TH",
+        "PRODID:-//Med Reminder//TH",
         "BEGIN:VEVENT",
-        `SUMMARY:⚠️ หยุดยา ${med}`,
+        `SUMMARY:หยุดยา ${med} (ก่อนตรวจสมรรถภาพปอด)`,
         `DTSTART;TZID=Asia/Bangkok:${startTime}`,
         `DTEND;TZID=Asia/Bangkok:${endTime}`,
-        `DESCRIPTION:กรุณางดทานยา ${med} เพื่อเตรียมตัวผ่าตัดตามคำแนะนำของแพทย์`,
+        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้จนถึงวันนัดหมายตรวจสมรรถภาพปอด`,
         "BEGIN:VALARM",
-        "TRIGGER:-PT0M",
+        "TRIGGER:-PT0M", // ให้แจ้งเตือนทันทีเมื่อถึงเวลา (07:00 น.)
         "ACTION:DISPLAY",
         "DESCRIPTION:Reminder",
         "END:VALARM",
@@ -82,26 +81,15 @@
         "END:VCALENDAR"
     ].join("\n");
 
-    // สร้างไฟล์จำลองขึ้นมาในความจำเครื่อง
     const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
-    
-    // สร้างลิงก์ลับเพื่อสั่งให้เครื่องดาวน์โหลดไฟล์
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', 'med-alert.ics');
     document.body.appendChild(link);
     link.click();
-    
-    // ลบลิงก์ออกเพื่อประหยัดความจำ
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-
-    // แจ้งเตือนผู้สูงอายุ (สำคัญมากสำหรับ Android)
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (!isIOS) {
-        alert("บันทึกสำเร็จ! กรุณากดปุ่ม 'เปิด' (Open) ที่แจ้งเตือนด้านบน เพื่อเก็บลงปฏิทินของเครื่องนะคะ/ครับ");
-    }
 }
     </script>
 </body>
