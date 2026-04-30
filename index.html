@@ -3,16 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกหยุดยาสูดก่อนตรวจสมรรถภาพปอด</title>
+    <title>บันทึกหยุดยาก่อนตรวจสมรรถภาพปอด</title>
     <style>
         body { font-family: 'Sarabun', sans-serif, -apple-system, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
         .med-box { background: #e7f3ff; padding: 15px; border-radius: 12px; margin: 20px 0; border: 1px solid #007bff; }
         .consent-text { text-align: left; font-size: 0.9rem; color: #555; line-height: 1.6; background: #fafafa; padding: 15px; border-radius: 10px; border-left: 4px solid #28a745; margin-bottom: 20px; }
-        button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #218838; }
+        
+        /* ปรับปุ่มให้ใหญ่ขึ้นเพื่อผู้สูงอายุ */
+        button { 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            padding: 20px 30px; 
+            border-radius: 15px; 
+            font-size: 1.3rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            width: 100%; 
+            transition: 0.3s; 
+            margin-top: 10px; 
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
+        }
+        button:hover { background: #218838; transform: scale(1.02); }
         .hidden { display: none; }
-        .footer-note { font-size: 0.75rem; color: #888; margin-top: 20px; }
+        .footer-note { font-size: 0.8rem; color: #d9534f; margin-top: 20px; font-weight: bold; }
+        
+        /* สไตล์พิเศษสำหรับรายชื่อยาหลายตัว */
+        #displayMed { 
+            margin-top: 0; 
+            color: #d9534f; 
+            line-height: 1.5; 
+            word-break: break-word; 
+            text-align: left; 
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -31,66 +56,74 @@
         <div id="mainSection" class="hidden">
             <h2 style="color: #007bff;">📌 บันทึกแจ้งเตือน</h2>
             <div class="med-box">
-                <p style="margin-bottom: 5px; color: #666;">หมายเหตุ: กรณีเลื่อนนัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยาสูดโทร 02-849-6600</p>
+                <p style="margin-bottom: 5px; color: #666; font-size: 0.85rem;">หมายเหตุ: กรณีเลื่อนนัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยาโทร 02-849-6600</p>
                 <hr>
-                <p style="margin-bottom: 5px;">ชื่อยาที่ต้องหยุด:</p>
-                <h3 id="displayMed" style="margin-top: 0; color: #d9534f;">-</h3>
+                <p style="margin-bottom: 5px; font-weight: bold;">รายการยาสูดที่ต้องหยุด:</p>
+                <!-- ปรับเป็น <div> เพื่อให้รองรับการขึ้นบรรทัดใหม่ -->
+                <div id="displayMed"></div>
+                <hr>
                 <p style="margin-bottom: 5px;">ตั้งแต่วันที่ (เวลา 07:00 น.):</p>
                 <h3 id="displayDate" style="margin-top: 0;">-</h3>
             </div>
             <button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
+            <p class="footer-note">⚠️ เมื่อกดแล้ว อย่าลืมกด "บันทึก" (Save) ที่มุมขวาบนของหน้าจออีกครั้งนะคะ</p>
         </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const med = urlParams.get('m') || "ไม่ระบุชื่อยา";
+        // ดึงชื่อยา (m) และจัดการคอมมาให้เป็นการขึ้นบรรทัดใหม่
+        const medRaw = urlParams.get('m') || "ไม่ระบุชื่อยา";
         const dateRaw = urlParams.get('d') || "";
 
         function acceptConsent() {
             document.getElementById('consentSection').classList.add('hidden');
             document.getElementById('mainSection').classList.remove('hidden');
             
-            document.getElementById('displayMed').innerText = med;
+            // เปลี่ยนเครื่องหมายคอมมาจากการเลือก Checkbox ให้เป็นบรรทัดใหม่
+            const formattedMed = medRaw.split(',').join('<br>• ');
+            document.getElementById('displayMed').innerHTML = '• ' + formattedMed;
+
             if(dateRaw && dateRaw.length === 8) {
                 document.getElementById('displayDate').innerText = `${dateRaw.substring(6,8)}/${dateRaw.substring(4,6)}/${dateRaw.substring(0,4)}`;
             }
         }
 
-       function generateICS() {
-    // กำหนดเวลาเริ่มและจบเป็น 07:00 น. (7 โมงเช้า)
-    // รูปแบบคือ T070000 (T ตามด้วยชั่วโมงนาทีวินาที)
-    const startTime = dateRaw + "T070000"; 
-    const endTime = dateRaw + "T080000"; // ให้จบเหตุการณ์ตอน 8 โมง
+        function generateICS() {
+            const startTime = dateRaw + "T070000"; 
+            const endTime = dateRaw + "T080000";
 
-    const icsMsg = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "PRODID:-//Med Reminder//TH",
-        "BEGIN:VEVENT",
-        `SUMMARY:หยุดยา ${med} (ก่อนตรวจสมรรถภาพปอด)`,
-        `DTSTART;TZID=Asia/Bangkok:${startTime}`,
-        `DTEND;TZID=Asia/Bangkok:${endTime}`,
-        `DESCRIPTION:กรุณางดทานยา ${med} ตั้งแต่วันนี้จนถึงวันนัดหมายตรวจสมรรถภาพปอด`,
-        "BEGIN:VALARM",
-        "TRIGGER:-PT0M", // ให้แจ้งเตือนทันทีเมื่อถึงเวลา (07:00 น.)
-        "ACTION:DISPLAY",
-        "DESCRIPTION:Reminder",
-        "END:VALARM",
-        "END:VEVENT",
-        "END:VCALENDAR"
-    ].join("\n");
+            // ปรับชื่อยาในหัวข้อปฏิทินให้สั้นลงถ้ามีหลายตัว (เพื่อไม่ให้หัวข้อเละ)
+            const summaryMed = medRaw.length > 30 ? medRaw.substring(0, 30) + "..." : medRaw;
 
-    const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'med-alert.ics');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-}
+            const icsMsg = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "PRODID:-//Med Reminder//TH",
+                "BEGIN:VEVENT",
+                `SUMMARY:หยุดยา ${summaryMed} (ก่อนตรวจปอด)`,
+                `DTSTART;TZID=Asia/Bangkok:${startTime}`,
+                `DTEND;TZID=Asia/Bangkok:${endTime}`,
+                `DESCRIPTION:รายการยาที่ต้องงด: ${medRaw} เพื่อเตรียมตัวตรวจสมรรถภาพปอด`,
+                "BEGIN:VALARM",
+                "TRIGGER:-PT0M",
+                "ACTION:DISPLAY",
+                "DESCRIPTION:Reminder",
+                "END:VALARM",
+                "END:VEVENT",
+                "END:VCALENDAR"
+            ].join("\n");
+
+            const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'med-alert.ics');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
     </script>
 </body>
 </html>
