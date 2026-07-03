@@ -10,9 +10,7 @@
         .med-box { background: #e7f3ff; padding: 15px; border-radius: 12px; margin: 20px 0; border: 1px solid #007bff; }
         .consent-text { text-align: left; font-size: 0.9rem; color: #555; line-height: 1.6; background: #fafafa; padding: 15px; border-radius: 10px; border-left: 4px solid #28a745; margin-bottom: 20px; }
         
-        /* ปรับปุ่มให้ใหญ่ขึ้นเพื่อผู้สูงอายุ */
         button { 
-            background: #28a745; 
             color: white; 
             border: none; 
             padding: 20px 30px; 
@@ -23,13 +21,19 @@
             width: 100%; 
             transition: 0.3s; 
             margin-top: 10px; 
-            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
         }
-        button:hover { background: #218838; transform: scale(1.02); }
+        
+        .btn-success { background: #28a745; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2); }
+        .btn-success:hover { background: #218838; transform: scale(1.02); }
+        
+        .btn-folder { background: #007bff; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); text-decoration: none; display: block; }
+        .btn-folder:hover { background: #0056b3; transform: scale(1.02); }
+
         .hidden { display: none; }
         .footer-note { font-size: 0.8rem; color: #d9534f; margin-top: 20px; font-weight: bold; }
         
-        /* สไตล์พิเศษสำหรับรายชื่อยาหลายตัว */
         #displayMed { 
             margin-top: 0; 
             color: #d9534f; 
@@ -50,7 +54,7 @@
                 2. ระบบ <b>"ไม่มี"</b> การเก็บข้อมูลของคุณลงในฐานข้อมูลใดๆ<br>
                 3. เมื่อปิดหน้านี้ ข้อมูลจะถูกล้างออกจากระบบทันที
             </div>
-            <button onclick="acceptConsent()">ยินยอมและดำเนินการต่อ</button>
+            <button class="btn-success" onclick="acceptConsent()">ยินยอมและดำเนินการต่อ</button>
         </div>
 
         <div id="mainSection" class="hidden">
@@ -59,26 +63,25 @@
                 <p style="margin-bottom: 5px; color: #666; font-size: 0.85rem;">หมายเหตุ: กรณีเลื่อนนัด กรุณาติดต่อหน่วยอายุรกรรม 2 เพื่อปรับเปลี่ยนการหยุดยาโทร 02-849-6600</p>
                 <hr>
                 <p style="margin-bottom: 5px; font-weight: bold;">รายการยาสูดที่ต้องหยุด:</p>
-                <!-- ปรับเป็น <div> เพื่อให้รองรับการขึ้นบรรทัดใหม่ -->
                 <div id="displayMed"></div>
                 <hr>
                 <p style="margin-bottom: 5px;">ตั้งแต่วันที่ (เวลา 07:00 น.):</p>
                 <h3 id="displayDate" style="margin-top: 0;">-</h3>
             </div>
-            <!-- ปุ่มเดิมของคุณสำหรับบันทึกลงปฏิทิน -->
-		<button onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
-		
-		<!-- 📁 ปุ่มใหม่ที่เพิ่มขึ้นมาสำหรับลิงก์ไปโฟลเดอร์ -->
-		<a href="https://canva.link/pft-qr-alert" target="_blank">
-		<button class="btn-folder" type="button">📁 ตัวอย่างยา/วีดิโอการปฏิบัติตัว</button></a>
             
-		<p class="footer-note">⚠️ เมื่อกดแล้ว อย่าลืมกด "บันทึก" (Save) ที่มุมขวาบนของหน้าจออีกครั้งนะคะ</p>
+            <button class="btn-success" onclick="generateICS()">📅 บันทึกลงปฏิทินมือถือ</button>
+            
+            <!-- ใส่ URL เดียวกันกับในปฏิทินที่นี่เพื่อความสอดคล้องกัน -->
+            <a href="https://your-folder-url-here.com" target="_blank">
+                <button class="btn-folder" type="button">📁 เปิดโฟลเดอร์เอกสาร</button>
+            </a>
+            
+            <p class="footer-note">⚠️ เมื่อกดแล้ว อย่าลืมกด "บันทึก" (Save) ที่มุมขวาบนของหน้าจออีกครั้งนะคะ</p>
         </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        // ดึงชื่อยา (m) และจัดการคอมมาให้เป็นการขึ้นบรรทัดใหม่
         const medRaw = urlParams.get('m') || "ไม่ระบุชื่อยา";
         const dateRaw = urlParams.get('d') || "";
 
@@ -86,7 +89,6 @@
             document.getElementById('consentSection').classList.add('hidden');
             document.getElementById('mainSection').classList.remove('hidden');
             
-            // เปลี่ยนเครื่องหมายคอมมาจากการเลือก Checkbox ให้เป็นบรรทัดใหม่
             const formattedMed = medRaw.split(',').join('<br>• ');
             document.getElementById('displayMed').innerHTML = '• ' + formattedMed;
 
@@ -99,7 +101,6 @@
             const startTime = dateRaw + "T070000"; 
             const endTime = dateRaw + "T080000";
 
-            // ปรับชื่อยาในหัวข้อปฏิทินให้สั้นลงถ้ามีหลายตัว (เพื่อไม่ให้หัวข้อเละ)
             const summaryMed = medRaw.length > 30 ? medRaw.substring(0, 30) + "..." : medRaw;
 
             // 🔗 กำหนดลิงก์โฟลเดอร์ที่คุณต้องการให้คนไข้กดจากในปฏิทินที่นี่ครับ
@@ -124,6 +125,7 @@
                 "END:VALARM",
                 "END:VEVENT",
                 "END:VCALENDAR"
+            ].join("\n");
 
             const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
