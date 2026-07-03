@@ -102,6 +102,9 @@
             // ปรับชื่อยาในหัวข้อปฏิทินให้สั้นลงถ้ามีหลายตัว (เพื่อไม่ให้หัวข้อเละ)
             const summaryMed = medRaw.length > 30 ? medRaw.substring(0, 30) + "..." : medRaw;
 
+            // 🔗 กำหนดลิงก์โฟลเดอร์ที่คุณต้องการให้คนไข้กดจากในปฏิทินที่นี่ครับ
+            const myFolderUrl = "https://canva.link/pft-qr-alert";
+
             const icsMsg = [
                 "BEGIN:VCALENDAR",
                 "VERSION:2.0",
@@ -110,7 +113,10 @@
                 `SUMMARY:หยุดยา ${summaryMed} (ก่อนตรวจปอด)`,
                 `DTSTART;TZID=Asia/Bangkok:${startTime}`,
                 `DTEND;TZID=Asia/Bangkok:${endTime}`,
-                `DESCRIPTION:รายการยาที่ต้องงด: ${medRaw} เพื่อเตรียมตัวตรวจสมรรถภาพปอด`,
+                // ใส่ลิงก์ลงในรายละเอียด และระบุว่าให้ดูเอกสารเพิ่มเติมได้ที่นี่
+                `DESCRIPTION:รายการยาที่ต้องงด: ${medRaw} เพื่อเตรียมตัวตรวจสมรรถภาพปอด\\n\\nดูเอกสารขั้นตอนและคำแนะนำเพิ่มเติมได้ที่ลิงก์นี้:\\n${myFolderUrl}`,
+                // ใส่ลิงก์ลงในช่อง Location (ที่ตั้ง) เพิ่มเติมด้วย เพื่อให้ระบบมือถือบางรุ่นสร้างปุ่มกดได้ง่ายขึ้น
+                `LOCATION:${myFolderUrl}`,
                 "BEGIN:VALARM",
                 "TRIGGER:-PT0M",
                 "ACTION:DISPLAY",
@@ -118,7 +124,6 @@
                 "END:VALARM",
                 "END:VEVENT",
                 "END:VCALENDAR"
-            ].join("\n");
 
             const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
